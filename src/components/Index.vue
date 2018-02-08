@@ -8,7 +8,7 @@
     <input class="toggle-all" id="toggle-all" type="checkbox" v-model="allDone"/>
       <label for="toggle-all">一键全部完成</label>
       <ul class="todo-list">
-       <li v-for="(todo, index) in todos" :key="'todo-' + index" :class="{ completed: todo.completed, editing: todo === editedTodo}">
+       <li v-show="defaultShow || (whichShow ? todo.completed : !todo.completed) " v-for="(todo, index) in todos" :key="'todo-' + index" :class="{ completed: todo.completed, editing: todo === editedTodo}">
          <div class="view">
           <input class="toggle" type="checkbox" v-model="todo.completed"/>
           <label @dblclick="editTodo(todo)">{{ todo.title }}</label>
@@ -27,11 +27,20 @@
     <footer class="footer" v-show="showTodos" >
       <span class="todo-count"><strong>{{activeCount}}</strong> 项未完成</span>
       <ul class="filters">
-        <li> <a href="#">全部</a> </li>
-        <li> <a href="#">未完成</a> </li>
-        <li> <a href="#">已完成</a> </li>
+       <li> <a href="javascript:void(0);"
+         :class="{ selected: visibility === 'All' }"
+         @click="showAll"
+         >全部</a> </li>
+       <li> <a href="javascript:void(0);"
+         :class="{ selected: visibility === 'Active' }"
+         @click="showActive"
+         >未完成</a> </li>
+       <li> <a href="javascript:void(0);"
+         :class="{ selected: visibility === 'Completed' }"
+         @click="showCompleted"
+         >已完成</a> </li>
       </ul>
-      <button class="clear-completed" @click="clearAllTodos">清空已完成</button>
+      <button class="clear-completed" @click="clearAllTodos" v-show="completedCount > 0">清空已完成</button>
    </footer>
    </section>
 </template>
@@ -44,7 +53,10 @@ export default {
       newTodo: '', // 存放输入的任务
       todos: [], // 存放所有任务
       editedTodo: null, // 双击任务名称可编辑
-      beforeEditCache: '' // 存放双击编辑的字段
+      beforeEditCache: '', // 存放双击编辑的字段
+      defaultShow: true,
+      whichShow: true,
+      visibility: ''
     }
   },
   computed: {
@@ -60,6 +72,16 @@ export default {
 					}
 				}
 				return count
+    },
+    completedCount () {
+      let todoArr = this.todos
+      let count = 0
+      for (let i = 0; i < todoArr.length; i++) {
+				if (todoArr[i].completed === true) {
+					count++
+				}
+			}
+			return count
     },
     allDone: {
       get() {
@@ -118,6 +140,20 @@ export default {
     clearAllTodos () {
       this.todos = this.todos.filter(todo => todo.completed === false)
       window.localStorage.setItem('todos', JSON.stringify(this.todos))
+    },
+    showAll () {
+      this.visibility = 'All'
+      this.defaultShow = true
+    },
+    showActive () {
+      this.visibility = 'Active'
+      this.defaultShow = false
+      this.whichShow = false
+    },
+    showCompleted () {
+      this.visibility = 'Completed'
+      this.defaultShow = false
+      this.whichShow = true
     }
   },
   directives: {
